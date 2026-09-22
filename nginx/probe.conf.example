@@ -1,0 +1,26 @@
+# expose the probe server through nginx.
+# nginx must stay transparent here, otherwise the measurement describes nginx
+# instead of whatever sits in front of it.
+
+location ^~ /probe {
+    proxy_pass http://127.0.0.1:9000;
+    proxy_http_version 1.1;
+
+    proxy_set_header Host $host;
+    proxy_set_header Connection "";
+    proxy_set_header X-Real-IP $remote_addr;
+
+    # without these nginx buffers and hides the real intermediary
+    proxy_buffering off;
+    proxy_request_buffering off;
+
+    # long responses must survive the idle-timeout probe
+    proxy_read_timeout 3600s;
+    proxy_send_timeout 3600s;
+
+    client_max_body_size 0;
+    gzip off;
+
+    client_header_buffer_size 8k;
+    large_client_header_buffers 8 16k;
+}
